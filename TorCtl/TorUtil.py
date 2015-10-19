@@ -23,7 +23,7 @@ else:
   from hashlib import sha1
 
 __all__ = ["Enum", "Enum2", "Callable", "sort_list", "quote", "escape_dots", "unescape_dots",
-      "BufSock", "secret_to_key", "urandom_rng", "s2k_gen", "s2k_check", "plog", 
+      "BufSock", "secret_to_key", "urandom_rng", "s2k_gen", "s2k_check", "plog",
      "ListenSocket", "zprob", "logfile", "loglevel", "loglevels"]
 
 # TODO: This isn't the right place for these.. But at least it's unified.
@@ -49,7 +49,7 @@ class Referrer:
       if hasattr(r, "__class__"):
         cl = r.__class__.__name__
         # Skip frames and list iterators.. prob just us
-        if cl in ("frame", "listiterator"): continue 
+        if cl in ("frame", "listiterator"): continue
         if cl not in self.referrers:
           self.referrers[cl] = Referrer(cl)
         self.referrers[cl].count += 1
@@ -68,7 +68,7 @@ def dump_class_ref_counts(referrer_depth=2, cutoff=500, rcutoff=1,
                  'builtin_function_or_method',
                  'wrapper_descriptor')):
   """ Debugging function to track down types of objects
-      that cannot be garbage collected because we hold refs to them 
+      that cannot be garbage collected because we hold refs to them
       somewhere."""
   import gc
   __dump_class_ref_counts(gc, referrer_depth, cutoff, rcutoff, ignore)
@@ -221,9 +221,10 @@ class BufSock:
     self._s.send(s)
 
   def close(self):
+    self._s.shutdown(socket.SHUT_RDWR)
     self._s.close()
 
-# SocketServer.TCPServer is nuts.. 
+# SocketServer.TCPServer is nuts..
 class ListenSocket:
   def __init__(self, listen_ip, port):
     msg = None
@@ -241,6 +242,7 @@ class ListenSocket:
         self.s.bind(sa)
         self.s.listen(1)
       except socket.error, msg:
+        self.s.shutdown(socket.SHUT_RDWR)
         self.s.close()
         self.s = None
         continue
@@ -253,6 +255,7 @@ class ListenSocket:
     return conn
 
   def close(self):
+    self.s.shutdown(socket.SHUT_RDWR)
     self.s.close()
 
 
@@ -372,7 +375,7 @@ def plog(level, msg, *args):
 def zprob(z):
     """
 Returns the area under the normal curve 'to the left of' the given z value.
-Thus, 
+Thus,
     for z<0, zprob(z) = 1-tail probability
     for z>0, 1.0-zprob(z) = 1-tail probability
     for any z, 2.0*(1.0-zprob(abs(z))) = 2-tail probability
